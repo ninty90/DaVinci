@@ -1,4 +1,4 @@
-[![](https://jitpack.io/v/CPPAlien/DaVinci.svg)](https://jitpack.io/#CPPAlien/DaVinci)
+[![](https://jitpack.io/v/ninty90/DaVinci.svg)](https://jitpack.io/#ninty90/DaVinci)
 # DaVinci
 基于Volley实现的一款多功能网络库, 目前包括了普通图片和Gif图片的加载显示、图片的二级缓存机制、可以开启Cookie的http请求等功能。
 
