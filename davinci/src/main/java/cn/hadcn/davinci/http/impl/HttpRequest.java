@@ -19,7 +19,7 @@ import cn.hadcn.davinci.volley.VolleyError;
 /**
  * BaseRequest
  * Created by 90Chris on 2015/1/26.
- * */
+ */
 public class HttpRequest {
     private RequestQueue mRequestQueue;
     private Map<String, String> mHeadersMap = new HashMap<>();
@@ -28,17 +28,29 @@ public class HttpRequest {
     private int mTimeOutMs = DefaultRetryPolicy.DEFAULT_TIMEOUT_MS;
     private int mMaxRetries = DefaultRetryPolicy.DEFAULT_MAX_RETRIES;
     private boolean isEnableCookie = false;
+    private boolean mShouldCache = true;
     private String mCookie = null;
     private OnDaVinciRequestListener mRequestListener = null;
 
-    public HttpRequest( RequestQueue requestQueue, boolean enableCookie, String cookie) {
+    public HttpRequest(RequestQueue requestQueue, boolean enableCookie, String cookie) {
         mRequestQueue = requestQueue;
         isEnableCookie = enableCookie;
         mCookie = cookie;
     }
 
+    public boolean shouldCache() {
+        return mShouldCache;
+    }
+
+    public HttpRequest shouldCache(Boolean shouldCache) {
+        this.mShouldCache = shouldCache;
+        return this;
+    }
+
+
     /**
      * timeout millisecond, default is 2500 ms
+     *
      * @param timeOutMs timeout
      * @return this
      */
@@ -49,6 +61,7 @@ public class HttpRequest {
 
     /**
      * retry times, default is once
+     *
      * @param maxRetries time of retrying
      * @return this
      */
@@ -59,6 +72,7 @@ public class HttpRequest {
 
     /**
      * add header in request
+     *
      * @param headersMap header
      * @return this
      */
@@ -69,6 +83,7 @@ public class HttpRequest {
 
     /**
      * set Content-Type field, default is application/json
+     *
      * @param contentType content-type
      * @return this
      */
@@ -79,8 +94,9 @@ public class HttpRequest {
 
     /**
      * set Content-Type field, default is application/json
+     *
      * @param contentType content-type
-     * @param charset charset of request body, default is utf-8
+     * @param charset     charset of request body, default is utf-8
      * @return this
      */
     public HttpRequest contentType(String contentType, String charset) {
@@ -91,8 +107,9 @@ public class HttpRequest {
 
     /**
      * get method
-     * @param requestUrl request url of get, must include http:// as head
-     * @param params get parameters, will combine the params as a get request, like http://ninty.cc?a=1&b=2
+     *
+     * @param requestUrl      request url of get, must include http:// as head
+     * @param params          get parameters, will combine the params as a get request, like http://ninty.cc?a=1&b=2
      * @param requestListener listener
      */
     public void doGet(String requestUrl, Map<String, Object> params, OnDaVinciRequestListener requestListener) {
@@ -102,8 +119,9 @@ public class HttpRequest {
 
     /**
      * post method
-     * @param requestUrl request url of post, must include http:// as head
-     * @param postJsonData post contents, json format data
+     *
+     * @param requestUrl      request url of post, must include http:// as head
+     * @param postJsonData    post contents, json format data
      * @param requestListener listener
      */
     public void doPost(String requestUrl, JSONObject postJsonData, OnDaVinciRequestListener requestListener) {
@@ -113,8 +131,9 @@ public class HttpRequest {
 
     /**
      * post method
-     * @param requestUrl request url of post, must include http:// as head
-     * @param postBodyString post body part, String type
+     *
+     * @param requestUrl      request url of post, must include http:// as head
+     * @param postBodyString  post body part, String type
      * @param requestListener listener
      */
     public void doPost(String requestUrl, String postBodyString, OnDaVinciRequestListener requestListener) {
@@ -124,7 +143,8 @@ public class HttpRequest {
 
     /**
      * post method
-     * @param requestUrl request url of post, must include http:// as head
+     *
+     * @param requestUrl      request url of post, must include http:// as head
      * @param requestListener listener
      */
     public void doPost(String requestUrl, OnDaVinciRequestListener requestListener) {
@@ -134,10 +154,11 @@ public class HttpRequest {
 
     /**
      * do http request
-     * @param method GET or POST
-     * @param url request url
-     * @param urlMap get method parameters  map
-     * @param postBody post method parameters
+     *
+     * @param method          GET or POST
+     * @param url             request url
+     * @param urlMap          get method parameters  map
+     * @param postBody        post method parameters
      * @param requestListener listener
      */
     private void doRequest(int method, String url, Map<String, Object> urlMap, Object postBody, final OnDaVinciRequestListener requestListener) {
@@ -145,9 +166,9 @@ public class HttpRequest {
         String requestUrl = url;
 
         //construct url
-        if ( null != urlMap ){
+        if (null != urlMap) {
             requestUrl += "?";
-            for ( String key : urlMap.keySet() ) {
+            for (String key : urlMap.keySet()) {
                 requestUrl = requestUrl + key + "=" + urlMap.get(key) + "&";
             }
         }
@@ -155,37 +176,40 @@ public class HttpRequest {
         VinciLog.d("Do request, url = " + requestUrl);
         DaVinciHttp jsonObjectRequest = getRequest(method, requestUrl, postBody);
 
-        if ( jsonObjectRequest == null ){
+        if (jsonObjectRequest == null) {
             VinciLog.e("post body type is error, it should be json or string");
             return;
         }
 
-        if ( isEnableCookie ) {
-            jsonObjectRequest.setCookie( mCookie );
+        if (isEnableCookie) {
+            jsonObjectRequest.setCookie(mCookie);
         }
         jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(mTimeOutMs, mMaxRetries, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         mRequestQueue.add(jsonObjectRequest);
     }
 
     private DaVinciHttp getRequest(int method, String requestUrl, Object postBody) {
-        if ( null != postBody ){
+        if (null != postBody) {
             VinciLog.d("body data = " + postBody.toString());
         }
 
         //inflate body part depends on type we get
         DaVinciHttp jsonObjectRequest = null;
-        if ( postBody == null ) {
+        if (postBody == null) {
             jsonObjectRequest = new DaVinciHttp(method, requestUrl,
                     new ResponseListener(),
                     new ErrorListener());
-        } else if ( postBody instanceof JSONObject ) {
-            jsonObjectRequest = new DaVinciHttp(method, requestUrl, (JSONObject)postBody,
+        } else if (postBody instanceof JSONObject) {
+            jsonObjectRequest = new DaVinciHttp(method, requestUrl, (JSONObject) postBody,
                     new ResponseListener(),
                     new ErrorListener());
-        } else if ( postBody instanceof String ) {
-            jsonObjectRequest = new DaVinciHttp(method, requestUrl, (String)postBody,
+        } else if (postBody instanceof String) {
+            jsonObjectRequest = new DaVinciHttp(method, requestUrl, (String) postBody,
                     new ResponseListener(),
                     new ErrorListener());
+        }
+        if (jsonObjectRequest != null) {
+            jsonObjectRequest.setShouldCache(mShouldCache);
         }
 
         return jsonObjectRequest;
@@ -197,7 +221,7 @@ public class HttpRequest {
         @Override
         public void onResponse(String response) {
             VinciLog.d("response:" + response);
-            if ( mRequestListener != null ) {
+            if (mRequestListener != null) {
                 mRequestListener.onDaVinciRequestSuccess(response);
             }
         }
@@ -207,17 +231,17 @@ public class HttpRequest {
 
         @Override
         public void onErrorResponse(VolleyError error) {
-            if ( error.networkResponse != null ) {
+            if (error.networkResponse != null) {
                 int code = error.networkResponse.statusCode;
                 byte[] data = error.networkResponse.data;
-                String reason = ( data == null ? null : new String(data) );
+                String reason = (data == null ? null : new String(data));
                 VinciLog.e("http failed: " + code + ", " + reason);
-                if ( mRequestListener != null ) {
+                if (mRequestListener != null) {
                     mRequestListener.onDaVinciRequestFailed(code, reason);
                 }
             } else {
                 VinciLog.e("http failed: There is no Internet connection");
-                if ( mRequestListener != null ) {
+                if (mRequestListener != null) {
                     mRequestListener.onDaVinciRequestFailed(-1, "There is no Internet connection");
                 }
             }
@@ -227,7 +251,9 @@ public class HttpRequest {
 
     private class DaVinciHttp extends StringRequest {
 
-        /** Content type for request. */
+        /**
+         * Content type for request.
+         */
         private final String PROTOCOL_CONTENT_TYPE = "application/json";
 
         public DaVinciHttp(int method, String url, String requestBody, Response.Listener<String> listener, Response.ErrorListener errorListener) {
@@ -237,7 +263,7 @@ public class HttpRequest {
         @Override
         public String getBodyContentType() {
             String contentType = PROTOCOL_CONTENT_TYPE;
-            if ( mContentType != null ) {
+            if (mContentType != null) {
                 contentType = mContentType;
             }
             return String.format("%s; charset=%s", contentType, mCharset);
@@ -259,9 +285,10 @@ public class HttpRequest {
 
         /**
          * set Cookie content
+         *
          * @param cookie cookie content
          */
-        public void setCookie( String cookie ) {
+        public void setCookie(String cookie) {
             VinciLog.d("Put Cookie:" + cookie);
             mHeadersMap.put("Cookie", cookie);
         }
