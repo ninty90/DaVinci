@@ -28,51 +28,51 @@ public class DiskLruImageCache implements VinciImageLoader.ImageCache {
     private static final int VALUE_COUNT = 1;
     private static final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 8);
 
-    public DiskLruImageCache( String cachePath, int diskCacheSize ) {
+    public DiskLruImageCache(String cachePath, int diskCacheSize) {
         try {
-                final File diskCacheDir = new File(cachePath);
-                mMemoryCache = new LruImageCache(maxMemory);
-                mDiskCache = DiskLruCache.open( diskCacheDir, APP_VERSION, VALUE_COUNT, diskCacheSize );
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            final File diskCacheDir = new File(cachePath);
+            mMemoryCache = new LruImageCache(maxMemory);
+            mDiskCache = DiskLruCache.open(diskCacheDir, APP_VERSION, VALUE_COUNT, diskCacheSize);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    private void writeBitmapToFile(byte[] data, DiskLruCache.Editor editor ) throws IOException {
+    private void writeBitmapToFile(byte[] data, DiskLruCache.Editor editor) throws IOException {
         OutputStream out = null;
         try {
-            out = new BufferedOutputStream( editor.newOutputStream(0), IO_BUFFER_SIZE );
+            out = new BufferedOutputStream(editor.newOutputStream(0), IO_BUFFER_SIZE);
             out.write(data);
         } finally {
-            if ( out != null ) {
+            if (out != null) {
                 out.close();
             }
         }
     }
 
     @Override
-    public void putBitmap( String key, byte[] data ) {
+    public void putBitmap(String key, byte[] data) {
         // save to memory cache first
         saveToMemory(key, data);
 
         // save to disk cache
         DiskLruCache.Editor editor = null;
         try {
-            editor = mDiskCache.edit( key );
-            if ( editor == null ) {
+            editor = mDiskCache.edit(key);
+            if (editor == null) {
                 return;
             }
-            writeBitmapToFile( data, editor);
+            writeBitmapToFile(data, editor);
             mDiskCache.flush();
             editor.commit();
         } catch (IOException e) {
             VinciLog.e("Image put on disk cache failed, key = " + key, e);
             try {
-                if ( editor != null ) {
+                if (editor != null) {
                     editor.abort();
                 }
             } catch (IOException ignored) {
-            }           
+            }
         }
     }
 
@@ -80,29 +80,29 @@ public class DiskLruImageCache implements VinciImageLoader.ImageCache {
     public ImageEntity getBitmap(String key) {
         ImageEntity imageEntity = mMemoryCache.getMemCache(key);
 
-        if ( imageEntity != null ) {
+        if (imageEntity != null) {
             return imageEntity;
         }
 
         DiskLruCache.Snapshot snapshot = null;
         try {
-            snapshot = mDiskCache.get( key );
-            if ( snapshot == null ) {
+            snapshot = mDiskCache.get(key);
+            if (snapshot == null) {
                 return null;
             }
             final InputStream in = snapshot.getInputStream(0);
-            if ( in != null ) {
+            if (in != null) {
                 final BufferedInputStream buffIn = new BufferedInputStream(in, IO_BUFFER_SIZE);
                 int size = buffIn.available();
                 byte[] bytes = new byte[size];
-                if ( buffIn.read(bytes) == -1) return null;
+                if (buffIn.read(bytes) == -1) return null;
 
                 imageEntity = saveToMemory(key, bytes);
             }
-        } catch ( IOException e ) {
+        } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if ( snapshot != null ) {
+            if (snapshot != null) {
                 snapshot.close();
             }
         }
@@ -113,10 +113,12 @@ public class DiskLruImageCache implements VinciImageLoader.ImageCache {
     private ImageEntity saveToMemory(String key, byte[] data) {
         ImageEntity.Builder builder = new ImageEntity.Builder(data.length);
 
-        if ( Util.isGif(data) ) {
+        if (Util.isGif(data)) {
             builder.isGif(true).bytes(data);
         } else {
-            Bitmap image = BitmapFactory.decodeByteArray(data, 0, data.length);
+            BitmapFactory.Options op = new BitmapFactory.Options();
+            op.inPreferredConfig = Bitmap.Config.RGB_565;
+            Bitmap image = BitmapFactory.decodeByteArray(data, 0, data.length, op);
             builder.isGif(false).bitmap(image);
         }
         ImageEntity entity = builder.build();
@@ -127,7 +129,7 @@ public class DiskLruImageCache implements VinciImageLoader.ImageCache {
     public void clearCache() {
         try {
             mDiskCache.delete();
-        } catch ( IOException e ) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
