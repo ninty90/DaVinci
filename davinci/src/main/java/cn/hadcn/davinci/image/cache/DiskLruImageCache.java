@@ -113,7 +113,7 @@ public class DiskLruImageCache implements VinciImageLoader.ImageCache {
     }
 
 
-    public static Bitmap byteToBitmap(byte[] imgByte) {
+    public Bitmap byteToBitmap(byte[] imgByte) {
         InputStream input = null;
         Bitmap bitmap = null;
         BitmapFactory.Options options = new BitmapFactory.Options();
