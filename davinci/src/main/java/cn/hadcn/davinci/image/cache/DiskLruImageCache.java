@@ -118,6 +118,7 @@ public class DiskLruImageCache implements VinciImageLoader.ImageCache {
         Bitmap bitmap = null;
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.RGB_565;
+        options.inJustDecodeBounds = true;
         input = new ByteArrayInputStream(imgByte);
         SoftReference softRef = new SoftReference(BitmapFactory.decodeStream(
                 input, null, options));
