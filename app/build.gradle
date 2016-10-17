@@ -31,5 +31,4 @@ dependencies {
     compile 'pl.droidsonroids.gif:android-gif-drawable:1.1.15'
     compile 'com.github.bumptech.glide:glide:3.7.0'
     compile 'com.android.support:recyclerview-v7:24.1.1'
-    //compile 'com.github.CPPAlien:DaVinci:1.1.9'
 }
