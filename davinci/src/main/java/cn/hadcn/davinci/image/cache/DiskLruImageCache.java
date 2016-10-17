@@ -5,10 +5,12 @@ import android.graphics.BitmapFactory;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.ref.SoftReference;
 
 import cn.hadcn.davinci.image.VinciImageLoader;
 import cn.hadcn.davinci.image.base.ImageEntity;
@@ -110,15 +112,38 @@ public class DiskLruImageCache implements VinciImageLoader.ImageCache {
         return imageEntity;
     }
 
+
+    public static Bitmap byteToBitmap(byte[] imgByte) {
+        InputStream input = null;
+        Bitmap bitmap = null;
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inPreferredConfig = Bitmap.Config.RGB_565;
+        input = new ByteArrayInputStream(imgByte);
+        SoftReference softRef = new SoftReference(BitmapFactory.decodeStream(
+                input, null, options));
+        bitmap = (Bitmap) softRef.get();
+        if (imgByte != null) {
+            imgByte = null;
+        }
+        try {
+            if (input != null) {
+                input.close();
+            }
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return bitmap;
+    }
+
     private ImageEntity saveToMemory(String key, byte[] data) {
         ImageEntity.Builder builder = new ImageEntity.Builder(data.length);
 
         if (Util.isGif(data)) {
             builder.isGif(true).bytes(data);
         } else {
-            BitmapFactory.Options op = new BitmapFactory.Options();
-            op.inPreferredConfig = Bitmap.Config.RGB_565;
-            Bitmap image = BitmapFactory.decodeByteArray(data, 0, data.length, op);
+//            Bitmap image = BitmapFactory.decodeByteArray(data, 0, data.length, op);
+            Bitmap image = byteToBitmap(data);
             builder.isGif(false).bitmap(image);
         }
         ImageEntity entity = builder.build();
